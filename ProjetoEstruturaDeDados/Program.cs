@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ProjetoEstruturaDeDados
 {
@@ -7,12 +8,16 @@ namespace ProjetoEstruturaDeDados
     {
         static void Main(string[] args)
         {
-            bool transacao = false;
-            //Queue -> fila
-            var dicionarioFredis = new Dictionary<string, string>();
 
-            //Stack<String> teste = new Stack<string>();
-            //teste.
+            #region PrimeiraVersao
+            // var listaDeTransacoes = new Queue<bool>();
+
+            //Queue -> fila
+            //var fila = new Queue<DicionarioFredis>();
+
+
+            var primeiraTorre = new Stack<DicionarioFredis>();
+            var segundaTorre = new Stack<DicionarioFredis>();
 
             //Stack -> pilha
             while (true)
@@ -23,40 +28,33 @@ namespace ProjetoEstruturaDeDados
                 switch (entrada[0].ToLower())
                 {
                     case "set":
-                        if (dicionarioFredis.ContainsKey(entrada[1]))
-                        {
-                            dicionarioFredis[entrada[1]] = entrada[2];
-                        }
-                        else
-                        {
-                            dicionarioFredis.Add(entrada[1], entrada[2]);
-                        }
-
-                        Console.WriteLine("Ok!");
-
                         break;
                     case "get":
-                        if(dicionarioFredis.ContainsKey(entrada[1]))
-                        {
-                            Console.WriteLine(dicionarioFredis[entrada[1]]);
-                        }
-                        else
-                        {
-                            Console.WriteLine("(nil)");
-                        }
+
+                        var chaveValor = primeiraTorre.FirstOrDefault(df => df.Chave == entrada[1]);
+
+                        chaveValor = chaveValor ?? new DicionarioFredis("0", "0");
+
+                        Console.WriteLine(chaveValor.Chave + " " + chaveValor.Valor);
+                       
                         break;
                     case "del":
-                        dicionarioFredis.Remove(entrada[1]);
-                        Console.WriteLine("Ok!");
                         break;
                     case "add":
-                        dicionarioFredis.Add(entrada[1].ToLower(), entrada[2].ToLower());
+                        primeiraTorre.Push(new DicionarioFredis(entrada[1], entrada[2]));
                         break;
                     case "count":
-                        Console.WriteLine(dicionarioFredis.Count);
+                        Console.WriteLine(primeiraTorre.Count()); 
                         break;
                     case "begin":
-                        transacao = true;
+                        break;
+                    case "commit":
+                        foreach (var item in primeiraTorre)
+                        {
+                            segundaTorre.Push(item);
+                        }
+
+                        primeiraTorre.Clear();
                         break;
                     default:
                         Console.WriteLine("Comando inválido");
@@ -64,8 +62,10 @@ namespace ProjetoEstruturaDeDados
                 }
             }
 
+            #endregion
+
         }
 
-        
+
     }
 }
