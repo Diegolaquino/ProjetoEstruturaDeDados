@@ -13,6 +13,12 @@ namespace ProjetoEstruturaDeDados
             PodeSerExcluida = true;
         }
 
+        public int PegaIndice {
+            get
+            {
+                return Indice;
+            } 
+        }
         public static int Indice = 0;
 
         public bool Fechada { get; set; }

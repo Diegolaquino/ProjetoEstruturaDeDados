@@ -33,6 +33,17 @@ namespace ProjetoEstruturaDeDados
 
                 switch (entrada[0].ToLower())
                 {
+                    case "menu":
+                        Console.WriteLine(@"Menu:" + Environment.NewLine + 
+                         "1 - Adicionando dados:" + Environment.NewLine +
+                            "1.1 - Add e Set:" + Environment.NewLine +
+                            "Add:" + Environment.NewLine +
+                            "Add chave valor." + Environment.NewLine +
+                            "Set:" + Environment.NewLine + 
+                            "Set chave valor."
+
+                        );
+                        break;
                     #region set pronto
                     case "set":
                         if(listaDeTransacoes.Count == 0)
@@ -143,37 +154,27 @@ namespace ProjetoEstruturaDeDados
                         
                         break;
                     case "commit":
-
-                        if (listaDeTransacoes.Count == 0)
-                        {
-                            Console.WriteLine("Não há transação aberta para fazer commit");
-                            break;
-                        }
-
-                        var c = primeiraTorre.Count;
-                        segundaTorre.Clear();
-                        for (int i = 0; i < c; i++)
-                        {
-                            if(primeiraTorre.Peek().Operacao != Operacao.Exclusao)
-                            {
-                                segundaTorre.Push(primeiraTorre.Pop());
-                            }
-                        }
-
-                        //Zerar primeira torre
-                        primeiraTorre.Clear();
-
-                        var countStorre = segundaTorre.Count;
-                        for(int i = 0; i < countStorre; i++)
-                        {
-                            terceiraTorre.Push(segundaTorre.Pop());
-                        }
-
-                        Ok();
-
+                        Commit(ref primeiraTorre, ref segundaTorre, ref terceiraTorre, ref listaDeTransacoes);
+               
                         break;
                     case "rollback":
-
+                        if(listaDeTransacoes.Peek().PodeSerExcluida)
+                        {
+                            var ultimaTransacao = listaDeTransacoes.Pop();
+                            while (primeiraTorre.Peek().Transacao.PegaIndice == ultimaTransacao.PegaIndice)
+                            {
+                                primeiraTorre.Pop();
+                            }
+                            var transacaoAnterior = listaDeTransacoes.Pop();
+                            transacaoAnterior.PodeSerExcluida = false;
+                            listaDeTransacoes.Push(transacaoAnterior);
+                            Commit(ref primeiraTorre, ref segundaTorre, ref terceiraTorre, ref listaDeTransacoes);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Você já realizou rollback");
+                        }
+                        
                         break;
                     default:
                         Console.WriteLine("Comando inválido");
@@ -183,6 +184,40 @@ namespace ProjetoEstruturaDeDados
 
             #endregion
 
+        }
+
+        private static void Commit(ref Stack<DicionarioFredis> primeira, ref Stack<DicionarioFredis> segunda, ref Stack<DicionarioFredis> terceira, ref Stack<Transacao> transacoes)
+        {
+            if (transacoes.Count == 0)
+            {
+                Console.WriteLine("Não há transação aberta para fazer commit");
+                
+            }
+            else
+            {
+                var c = primeira.Count;
+                segunda.Clear();
+                for (int i = 0; i < c; i++)
+                {
+                    if (primeira.Peek().Operacao != Operacao.Exclusao)
+                    {
+                        segunda.Push(primeira.Pop());
+                    }
+                }
+
+                //Zerar primeira torre
+                primeira.Clear();
+
+                var countStorre = segunda.Count;
+                for (int i = 0; i < countStorre; i++)
+                {
+                    terceira.Push(segunda.Pop());
+                }
+
+                Console.WriteLine("Ok! (transactions left: 0)");
+            }
+
+            
         }
 
 
