@@ -105,9 +105,10 @@ namespace ProjetoEstruturaDeDados
                                     break;
                                 }
                             }
-                            if(segundaTorre.Count > 0)
+                            
+                            var count = segundaTorre.Count;
+                            if(count > 0)
                             {
-                                var count = segundaTorre.Count;
                                 for (int i = 0; i < count; i++)
                                 {
                                     primeiraTorre.Push(segundaTorre.Pop());
