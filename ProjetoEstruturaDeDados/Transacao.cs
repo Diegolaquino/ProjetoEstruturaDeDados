@@ -19,7 +19,7 @@ namespace ProjetoEstruturaDeDados
                 return Indice;
             } 
         }
-        public static int Indice = 0;
+        private static int Indice = 0;
 
         public bool Fechada { get; set; }
 
