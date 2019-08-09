@@ -8,15 +8,7 @@ namespace ProjetoEstruturaDeDados
     {
         static void Main(string[] args)
         {
-
-            #region PrimeiraVersao
-             var listaDeTransacoes = new Stack<Transacao>();
-
-            //Queue -> fila
-            //var fila = new Queue<DicionarioFredis>();
-
-            //var teste = new List<Stack<DicionarioFredis>>();
-            //var dicionarioCentral = new Dictionary<>();
+            var listaDeTransacoes = new Stack<Transacao>();
 
             Action Ok = () => Console.WriteLine("Ok!");
             Action Nil = () => Console.WriteLine("(nil)");
@@ -25,7 +17,43 @@ namespace ProjetoEstruturaDeDados
             var primeiraTorre = new Stack<DicionarioFredis>();
             var segundaTorre = new Stack<DicionarioFredis>();
             var terceiraTorre = new Stack<DicionarioFredis>();
-            
+
+            Console.WriteLine(@"Menu:"                                    + Environment.NewLine +
+                           "1 - Adicionando dados:"                       + Environment.NewLine +
+                           " 1.1 - Add e Set:"                            + Environment.NewLine +
+                           "  Add:"                                       + Environment.NewLine +
+                           "   Add chave valor."                          + Environment.NewLine +
+                           "  Set:"                                       + Environment.NewLine +
+                           "   Set chave valor."                          + Environment.NewLine + 
+                           " "                                            + Environment.NewLine + 
+                           "2 - Pegando dados: "                          + Environment.NewLine + 
+                           " 2.1 - Get:"                                  + Environment.NewLine +
+                           "   get chave"                                 + Environment.NewLine +
+                           " "                                            + Environment.NewLine + 
+                           "3 - Deletando dados"                          + Environment.NewLine +
+                           " 3.1 - Del"                                   + Environment.NewLine +
+                           "   del chave"                                 + Environment.NewLine +
+                           " "                                            + Environment.NewLine +
+                           "4 - Retornando quantidade de chaves"          + Environment.NewLine +
+                           " 4.1 - Count"                                 + Environment.NewLine +
+                           "   count"                                     + Environment.NewLine +
+                           " "                                            + Environment.NewLine +
+                           "5 - Iniciando uma transação"                  + Environment.NewLine +
+                           " 5.1 - Begin"                                 + Environment.NewLine +
+                           "  begin"                                      + Environment.NewLine +
+                           " "                                            + Environment.NewLine +
+                           "6 - Confirmand todas as operações realizadas" + Environment.NewLine +
+                           " 6.1 - Commit"                                + Environment.NewLine +
+                           "  commit"                                     + Environment.NewLine +
+                           " "                                            + Environment.NewLine +
+                           "7 - Desfazendo todas as operações da última " +
+                           "transação"                                    + Environment.NewLine +
+                           " 7.1 - RollBack"                              + Environment.NewLine +
+                           "   rollback"                                  + Environment.NewLine
+
+
+                       );
+
             while (true)
             {
                 Console.Write("> ");
@@ -33,17 +61,6 @@ namespace ProjetoEstruturaDeDados
 
                 switch (entrada[0].ToLower())
                 {
-                    case "menu":
-                        Console.WriteLine(@"Menu:" + Environment.NewLine + 
-                         "1 - Adicionando dados:" + Environment.NewLine +
-                            "1.1 - Add e Set:" + Environment.NewLine +
-                            "Add:" + Environment.NewLine +
-                            "Add chave valor." + Environment.NewLine +
-                            "Set:" + Environment.NewLine + 
-                            "Set chave valor."
-
-                        );
-                        break;
                     #region set pronto
                     case "set":
                         if(listaDeTransacoes.Count == 0)
@@ -181,8 +198,6 @@ namespace ProjetoEstruturaDeDados
                         break;
                 }
             }
-
-            #endregion
 
         }
 
