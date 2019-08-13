@@ -20,35 +20,35 @@ namespace ProjetoEstruturaDeDados
 
             Console.WriteLine(@"Menu:"                                    + Environment.NewLine +
                            "1 - Adicionando dados:"                       + Environment.NewLine +
-                           " 1.1 - Add e Set:"                            + Environment.NewLine +
+                     
                            "  Add:"                                       + Environment.NewLine +
                            "   Add chave valor."                          + Environment.NewLine +
                            "  Set:"                                       + Environment.NewLine +
                            "   Set chave valor."                          + Environment.NewLine + 
                            " "                                            + Environment.NewLine + 
                            "2 - Pegando dados: "                          + Environment.NewLine + 
-                           " 2.1 - Get:"                                  + Environment.NewLine +
+                       
                            "   get chave"                                 + Environment.NewLine +
                            " "                                            + Environment.NewLine + 
                            "3 - Deletando dados"                          + Environment.NewLine +
-                           " 3.1 - Del"                                   + Environment.NewLine +
+                       
                            "   del chave"                                 + Environment.NewLine +
                            " "                                            + Environment.NewLine +
                            "4 - Retornando quantidade de chaves"          + Environment.NewLine +
-                           " 4.1 - Count"                                 + Environment.NewLine +
+                        
                            "   count"                                     + Environment.NewLine +
                            " "                                            + Environment.NewLine +
                            "5 - Iniciando uma transação"                  + Environment.NewLine +
-                           " 5.1 - Begin"                                 + Environment.NewLine +
+                     
                            "  begin"                                      + Environment.NewLine +
                            " "                                            + Environment.NewLine +
                            "6 - Confirmand todas as operações realizadas" + Environment.NewLine +
-                           " 6.1 - Commit"                                + Environment.NewLine +
+             
                            "  commit"                                     + Environment.NewLine +
                            " "                                            + Environment.NewLine +
                            "7 - Desfazendo todas as operações da última " +
                            "transação"                                    + Environment.NewLine +
-                           " 7.1 - RollBack"                              + Environment.NewLine +
+                 
                            "   rollback"                                  + Environment.NewLine
 
 
@@ -183,10 +183,9 @@ namespace ProjetoEstruturaDeDados
                             {
                                 primeiraTorre.Pop();
                             }
-                            var transacaoAnterior = listaDeTransacoes.Pop();
-                            transacaoAnterior.PodeSerExcluida = false;
-                            listaDeTransacoes.Push(transacaoAnterior);
-                            Commit(ref primeiraTorre, ref segundaTorre, ref terceiraTorre, ref listaDeTransacoes);
+
+                            Console.WriteLine("Ok! (transactions left: 0)");
+
                         }
                         else
                         {
@@ -212,10 +211,12 @@ namespace ProjetoEstruturaDeDados
             else
             {
                 var c = primeira.Count;
+
+                var ultimaTransacao = transacoes.Peek();
                 segunda.Clear();
                 for (int i = 0; i < c; i++)
                 {
-                    if (primeira.Peek().Operacao != Operacao.Exclusao)
+                    if (primeira.Peek().Operacao != Operacao.Exclusao && ultimaTransacao.PegaIndice == primeira.Peek().Transacao.PegaIndice)
                     {
                         segunda.Push(primeira.Pop());
                     }
@@ -224,13 +225,15 @@ namespace ProjetoEstruturaDeDados
                 //Zerar primeira torre
                 primeira.Clear();
 
-                var countStorre = segunda.Count;
-                for (int i = 0; i < countStorre; i++)
+                var countSegundaTorre = segunda.Count;
+                for (int i = 0; i < countSegundaTorre; i++)
                 {
                     terceira.Push(segunda.Pop());
                 }
 
-                Console.WriteLine("Ok! (transactions left: 0)");
+                transacoes.Pop();
+
+                Console.WriteLine("Ok! (transactions left: {0})", transacoes.Count);
             }
 
             
