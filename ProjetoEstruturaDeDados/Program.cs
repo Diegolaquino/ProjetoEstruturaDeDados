@@ -14,44 +14,40 @@ namespace ProjetoEstruturaDeDados
             Action Nil = () => Console.WriteLine("(nil)");
 
 
-            var primeiraTorre = new Stack<DicionarioFredis>();
-            var segundaTorre = new Stack<DicionarioFredis>();
-            var terceiraTorre = new Stack<DicionarioFredis>();
+            var torrePrincipal = new Stack<DicionarioFredis>();
 
-            Console.WriteLine(@"Menu:"                                    + Environment.NewLine +
-                           "1 - Adicionando dados:"                       + Environment.NewLine +
-                     
-                           "  Add:"                                       + Environment.NewLine +
-                           "   Add chave valor."                          + Environment.NewLine +
-                           "  Set:"                                       + Environment.NewLine +
-                           "   Set chave valor."                          + Environment.NewLine + 
-                           " "                                            + Environment.NewLine + 
-                           "2 - Pegando dados: "                          + Environment.NewLine + 
-                       
-                           "   get chave"                                 + Environment.NewLine +
-                           " "                                            + Environment.NewLine + 
-                           "3 - Deletando dados"                          + Environment.NewLine +
-                       
-                           "   del chave"                                 + Environment.NewLine +
-                           " "                                            + Environment.NewLine +
-                           "4 - Retornando quantidade de chaves"          + Environment.NewLine +
-                        
-                           "   count"                                     + Environment.NewLine +
-                           " "                                            + Environment.NewLine +
-                           "5 - Iniciando uma transação"                  + Environment.NewLine +
-                     
-                           "  begin"                                      + Environment.NewLine +
-                           " "                                            + Environment.NewLine +
+            Console.WriteLine(@"Menu:" + Environment.NewLine +
+                           "1 - Adicionando dados:" + Environment.NewLine +
+
+                           "  Add:" + Environment.NewLine +
+                           "   Add chave valor." + Environment.NewLine +
+                           "  Set:" + Environment.NewLine +
+                           "   Set chave valor." + Environment.NewLine +
+                           " " + Environment.NewLine +
+                           "2 - Pegando dados: " + Environment.NewLine +
+
+                           "   get chave" + Environment.NewLine +
+                           " " + Environment.NewLine +
+                           "3 - Deletando dados" + Environment.NewLine +
+
+                           "   del chave" + Environment.NewLine +
+                           " " + Environment.NewLine +
+                           "4 - Retornando quantidade de chaves" + Environment.NewLine +
+
+                           "   count" + Environment.NewLine +
+                           " " + Environment.NewLine +
+                           "5 - Iniciando uma transação" + Environment.NewLine +
+
+                           "  begin" + Environment.NewLine +
+                           " " + Environment.NewLine +
                            "6 - Confirmand todas as operações realizadas" + Environment.NewLine +
-             
-                           "  commit"                                     + Environment.NewLine +
-                           " "                                            + Environment.NewLine +
+
+                           "  commit" + Environment.NewLine +
+                           " " + Environment.NewLine +
                            "7 - Desfazendo todas as operações da última " +
-                           "transação"                                    + Environment.NewLine +
-                 
-                           "   rollback"                                  + Environment.NewLine
+                           "transação" + Environment.NewLine +
 
-
+                           "   rollback" + Environment.NewLine
                        );
 
             while (true)
@@ -63,86 +59,68 @@ namespace ProjetoEstruturaDeDados
                 {
                     #region set pronto
                     case "set":
-                        if(listaDeTransacoes.Count == 0)
+                        if (listaDeTransacoes.Count == 0)
                         {
                             Console.WriteLine("Você deve iniciar pelo menos uma transação");
                             break;
                         }
 
-                        var objNovo = new DicionarioFredis(entrada[1], entrada[2]);
+                        var objNovo = new DicionarioFredis(entrada[1], entrada[2], listaDeTransacoes.Peek(), Operacao.Insercao);
 
-                        if (!primeiraTorre.Any(d => d.Chave == objNovo.Chave))
+                        if (!torrePrincipal.Any(d => d.Chave == objNovo.Chave))
                         {
                             objNovo.Transacao = listaDeTransacoes.Peek();
-                            primeiraTorre.Push(objNovo);
+                            torrePrincipal.Push(objNovo);
                             Ok();
                         }
                         else
                         {
                             Console.WriteLine("Já existe uma chave valor");
                         }
-                        
+
                         break;
                     #endregion
 
                     #region get pronto
                     case "get":
 
-                        var chaveValor = primeiraTorre.FirstOrDefault(d => d.Chave == entrada[1]);
+                        var chaveValor = torrePrincipal.FirstOrDefault(d => d.Chave == entrada[1]);
 
                         if (chaveValor == null)
                             Nil();
                         else
-                            Console.WriteLine(chaveValor.Chave + " " + chaveValor.Valor);
-                       
+                            Console.WriteLine("Chave -> " + chaveValor.Chave + " com valor -> " + chaveValor.Valor);
+
                         break;
                     #endregion
 
-                    #region del pronto
+                    #region del
                     case "del":
-                        
-                        if (primeiraTorre.Count <= 0 || primeiraTorre == null)
+                        if(torrePrincipal.Where(d => d.Chave == entrada[1]) == null)
                         {
-                            Console.WriteLine("Chave inexistente ou já excluída");
+                            Nil();
+                            break;
                         }
-                        else
-                        {
-                            var contador = primeiraTorre.Count;
-                            for (int i = 0; i < contador; i++)
-                            {
-                                if(!(primeiraTorre.Peek().Chave == entrada[1]))
-                                {
-                                    segundaTorre.Push(primeiraTorre.Pop());
-                                }
-                                else
-                                {
-                                    var objExcluido = primeiraTorre.Pop();
-                                    objExcluido.Operacao = Operacao.Exclusao;
-                                    primeiraTorre.Push(objExcluido);
-                                    break;
-                                }
-                            }
-                            
-                            var count = segundaTorre.Count;
-                            if(count > 0)
-                            {
-                                for (int i = 0; i < count; i++)
-                                {
-                                    primeiraTorre.Push(segundaTorre.Pop());
-                                }
-                            }
-                            Ok();
-                        }
+
+                        delChave(entrada[1], ref torrePrincipal);
+
                         break;
                     #endregion
 
                     #region add pronto
                     case "add":
-                        var o = new DicionarioFredis(entrada[1], entrada[2]);
 
-                        if (!primeiraTorre.Any(d => d.Chave == o.Chave))
+                        if (listaDeTransacoes.Count == 0)
                         {
-                            primeiraTorre.Push(o);
+                            Console.WriteLine("Você deve iniciar pelo menos uma transação");
+                            break;
+                        }
+
+                        var o = new DicionarioFredis(entrada[1], entrada[2], listaDeTransacoes.Peek(), Operacao.Insercao);
+
+                        if (!torrePrincipal.Any(d => d.Chave == o.Chave))
+                        {
+                            torrePrincipal.Push(o);
                             Ok();
                         }
                         else
@@ -154,44 +132,45 @@ namespace ProjetoEstruturaDeDados
 
                     #region count pronto
                     case "count":
-                        Console.WriteLine(primeiraTorre.Where(p => p.Operacao != Operacao.Exclusao).Count());
+                        var totalChaves = torrePrincipal.Where(df => df.Operacao == Operacao.Insercao).Count();
+                        Console.WriteLine(totalChaves);
                         break;
                     #endregion
 
-                    
+
                     case "begin":
-                        if(listaDeTransacoes.Count > 0)
-                        {
-                            var objAtualizado = listaDeTransacoes.Pop();
-                            objAtualizado.PodeSerExcluida = false;
-                            listaDeTransacoes.Push(objAtualizado);
-                        }
-                       
-                       listaDeTransacoes.Push(new Transacao());
-                       Console.WriteLine("Transação Aberta");
-                        
+                        listaDeTransacoes.Push(new Transacao());
+
                         break;
                     case "commit":
-                        Commit(ref primeiraTorre, ref segundaTorre, ref terceiraTorre, ref listaDeTransacoes);
-               
+
+                        if (listaDeTransacoes == null)
+                        {
+                            Console.WriteLine("(no transactions)");
+                            break;
+                        }
+
+                        //versao 1
+
+                        commitTransacoes(ref torrePrincipal);
+
+
                         break;
                     case "rollback":
-                        if(listaDeTransacoes.Peek().PodeSerExcluida)
-                        {
-                            var ultimaTransacao = listaDeTransacoes.Pop();
-                            while (primeiraTorre.Peek().Transacao.PegaIndice == ultimaTransacao.PegaIndice)
-                            {
-                                primeiraTorre.Pop();
-                            }
 
-                            Console.WriteLine("Ok! (transactions left: 0)");
-
-                        }
-                        else
+                        if(listaDeTransacoes == null)
                         {
-                            Console.WriteLine("Você já realizou rollback");
+                            Console.WriteLine("(no transactions)");
+                            break;
                         }
-                        
+
+                        var ultimaTransacao = listaDeTransacoes.Pop();
+
+                        while (ultimaTransacao.PegaIndice == torrePrincipal.Peek().Transacao.PegaIndice)
+                        {
+                            torrePrincipal.Pop();
+                        }
+
                         break;
                     default:
                         Console.WriteLine("Comando inválido");
@@ -201,44 +180,47 @@ namespace ProjetoEstruturaDeDados
 
         }
 
-        private static void Commit(ref Stack<DicionarioFredis> primeira, ref Stack<DicionarioFredis> segunda, ref Stack<DicionarioFredis> terceira, ref Stack<Transacao> transacoes)
+        private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal)
         {
-            if (transacoes.Count == 0)
-            {
-                Console.WriteLine("Não há transação aberta para fazer commit");
-                
-            }
-            else
-            {
-                var c = primeira.Count;
+            var temp = new Stack<DicionarioFredis>();
 
-                var ultimaTransacao = transacoes.Peek();
-                segunda.Clear();
-                for (int i = 0; i < c; i++)
+            var total = torrePrincipal.Count;
+
+            for (int i = 0; i < total; i++)
+            {
+                var obj = torrePrincipal.Pop();
+
+                if(obj.Chave == chave)
                 {
-                    if (primeira.Peek().Operacao != Operacao.Exclusao && ultimaTransacao.PegaIndice == primeira.Peek().Transacao.PegaIndice)
+                    obj.Operacao = Operacao.Exclusao;
+                    torrePrincipal.Push(obj);
+
+                    var totalTemp = temp.Count;
+                    for (int j = 0; j < totalTemp; j++)
                     {
-                        segunda.Push(primeira.Pop());
+                        torrePrincipal.Push(temp.Pop());  
                     }
+                    break;
+
                 }
-
-                //Zerar primeira torre
-                primeira.Clear();
-
-                var countSegundaTorre = segunda.Count;
-                for (int i = 0; i < countSegundaTorre; i++)
+                else
                 {
-                    terceira.Push(segunda.Pop());
+                    temp.Push(obj);
                 }
-
-                transacoes.Pop();
-
-                Console.WriteLine("Ok! (transactions left: {0})", transacoes.Count);
             }
-
-            
         }
 
+        private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal)
+        {
+            // versao 1
+            var temp = new Stack<DicionarioFredis>();
 
+            var total = torrePrincipal.Count;
+
+            for (int i = 0; i < total; i++)
+            {
+
+            }
+        }
     }
 }

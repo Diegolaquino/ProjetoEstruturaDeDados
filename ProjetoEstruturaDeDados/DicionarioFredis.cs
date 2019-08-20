@@ -6,11 +6,12 @@ namespace ProjetoEstruturaDeDados
 {
     public class DicionarioFredis
     {
-        public DicionarioFredis(string chave, string valor)
+        public DicionarioFredis(string chave, string valor, Transacao corrente, Operacao operacao)
         {
             Chave = chave;
             Valor = valor;
-            Operacao = Operacao.Insercao;
+            Transacao = corrente;
+            Operacao = operacao;
         }
 
         public override bool Equals(Object obj)
@@ -24,5 +25,10 @@ namespace ProjetoEstruturaDeDados
         public string Valor { get; set; }
 
         public Operacao Operacao { get; set; }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Transacao, Chave, Valor, Operacao);
+        }
     }
 }
