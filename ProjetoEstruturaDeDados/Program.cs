@@ -152,7 +152,7 @@ namespace ProjetoEstruturaDeDados
 
                         //versao 1
 
-                        commitTransacoes(ref torrePrincipal);
+                        commitTransacoes(ref torrePrincipal, ref listaDeTransacoes);
 
 
                         break;
@@ -169,7 +169,7 @@ namespace ProjetoEstruturaDeDados
                         while (ultimaTransacao.PegaIndice == torrePrincipal.Peek().Transacao.PegaIndice)
                         {
                             torrePrincipal.Pop();
-                        }
+                        };
 
                         break;
                     default:
@@ -210,17 +210,23 @@ namespace ProjetoEstruturaDeDados
             }
         }
 
-        private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal)
+        private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-            // versao 1
-            var temp = new Stack<DicionarioFredis>();
+            #region versao_1
+           // torrePrincipal.Clear();
+            #endregion
 
-            var total = torrePrincipal.Count;
+            #region versao_2
 
-            for (int i = 0; i < total; i++)
+            var ultimaTransacao = listaDeTransacoes.Pop();
+
+            while (ultimaTransacao.PegaIndice == torrePrincipal.Peek().Transacao.PegaIndice)
             {
+                torrePrincipal.Pop();
+            };
 
-            }
+            Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
+            #endregion
         }
     }
 }
