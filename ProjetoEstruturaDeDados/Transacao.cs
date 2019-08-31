@@ -6,9 +6,9 @@ namespace ProjetoEstruturaDeDados
 {
     public class Transacao
     {
-        public Transacao()
+        public Transacao(int indice)
         {
-            Indice++;
+            Indice = indice;
             Fechada = false;
             PodeSerExcluida = true;
         }
@@ -19,7 +19,7 @@ namespace ProjetoEstruturaDeDados
                 return Indice;
             } 
         }
-        private static int Indice = 0;
+        private int Indice;
 
         public bool Fechada { get; set; }
 

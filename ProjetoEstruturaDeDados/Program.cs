@@ -6,12 +6,16 @@ namespace ProjetoEstruturaDeDados
 {
     class Program
     {
+
+        static Action Ok = () => Console.WriteLine("Ok!");
+        static Action Nil = () => Console.WriteLine("(nil)");
+
         static void Main(string[] args)
         {
+            int geradorIndiceTransacao = 0;
+
             var listaDeTransacoes = new Stack<Transacao>();
 
-            Action Ok = () => Console.WriteLine("Ok!");
-            Action Nil = () => Console.WriteLine("(nil)");
 
 
             var torrePrincipal = new Stack<DicionarioFredis>();
@@ -139,8 +143,8 @@ namespace ProjetoEstruturaDeDados
 
 
                     case "begin":
-                        listaDeTransacoes.Push(new Transacao());
-
+                        listaDeTransacoes.Push(new Transacao(geradorIndiceTransacao));
+                        geradorIndiceTransacao++;
                         break;
                     case "commit":
 
@@ -166,7 +170,7 @@ namespace ProjetoEstruturaDeDados
 
                         var ultimaTransacao = listaDeTransacoes.Pop();
 
-                        while (ultimaTransacao.PegaIndice == torrePrincipal.Peek().Transacao.PegaIndice)
+                        while (ultimaTransacao.Equals(torrePrincipal.Peek().Transacao))
                         {
                             torrePrincipal.Pop();
                         };
@@ -183,48 +187,79 @@ namespace ProjetoEstruturaDeDados
         private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal)
         {
             var temp = new Stack<DicionarioFredis>();
-
             var total = torrePrincipal.Count;
 
-            for (int i = 0; i < total; i++)
+            if (torrePrincipal.Any(t => t.Chave == chave))
             {
-                var obj = torrePrincipal.Pop();
+                
 
-                if(obj.Chave == chave)
+                for (int i = 0; i < total; i++)
                 {
-                    obj.Operacao = Operacao.Exclusao;
-                    torrePrincipal.Push(obj);
+                    var obj = torrePrincipal.Pop();
 
-                    var totalTemp = temp.Count;
-                    for (int j = 0; j < totalTemp; j++)
+                    if (obj.Chave == chave)
                     {
-                        torrePrincipal.Push(temp.Pop());  
-                    }
-                    break;
+                        obj.Operacao = Operacao.Exclusao;
+  
+                        torrePrincipal.Push(obj);
+           
+                        var totalTemp = temp.Count;
 
-                }
-                else
-                {
-                    temp.Push(obj);
+                        if(totalTemp != 0)
+                        {
+                            for (int j = 0; j < totalTemp; j++)
+                            {
+                                torrePrincipal.Push(temp.Pop());
+                            }
+                        }
+
+                        break;
+                    }
+                    else
+                    {
+                        temp.Push(obj);
+                    }
                 }
             }
+            else
+            {
+                Nil();
+            } 
         }
 
         private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
+
+
             #region versao_1
-           // torrePrincipal.Clear();
+            // torrePrincipal.Clear();
             #endregion
 
             #region versao_2
 
+            var temp = new Stack<DicionarioFredis>();
+            
+
             var ultimaTransacao = listaDeTransacoes.Pop();
 
-            while (ultimaTransacao.PegaIndice == torrePrincipal.Peek().Transacao.PegaIndice)
+            while (torrePrincipal.Any(o => o.Transacao.Equals(ultimaTransacao)))
             {
-                torrePrincipal.Pop();
+                var obj = torrePrincipal.Pop();
+                if((obj.Operacao == Operacao.Insercao && obj.Transacao.Equals(ultimaTransacao)) || !obj.Transacao.Equals(ultimaTransacao))
+                {
+                    temp.Push(obj);
+                }
             };
 
+            var countTemp = temp.Count;
+            if (countTemp != 0)
+            {
+                for (int i = 0; i < countTemp; i++)
+                {
+                    torrePrincipal.Push(temp.Pop());
+                }
+            }
+            
             Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
             #endregion
         }
