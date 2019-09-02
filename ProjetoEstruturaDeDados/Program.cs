@@ -100,7 +100,7 @@ namespace ProjetoEstruturaDeDados
 
                     #region del
                     case "del":
-                        if(torrePrincipal.Where(d => d.Chave == entrada[1]) == null)
+                        if (torrePrincipal.Where(d => d.Chave == entrada[1]) == null)
                         {
                             Nil();
                             break;
@@ -162,7 +162,7 @@ namespace ProjetoEstruturaDeDados
                         break;
                     case "rollback":
 
-                        if(listaDeTransacoes == null)
+                        if (listaDeTransacoes == null)
                         {
                             Console.WriteLine("(no transactions)");
                             break;
@@ -191,7 +191,7 @@ namespace ProjetoEstruturaDeDados
 
             if (torrePrincipal.Any(t => t.Chave == chave))
             {
-                
+
 
                 for (int i = 0; i < total; i++)
                 {
@@ -200,12 +200,12 @@ namespace ProjetoEstruturaDeDados
                     if (obj.Chave == chave)
                     {
                         obj.Operacao = Operacao.Exclusao;
-  
+
                         torrePrincipal.Push(obj);
-           
+
                         var totalTemp = temp.Count;
 
-                        if(totalTemp != 0)
+                        if (totalTemp != 0)
                         {
                             for (int j = 0; j < totalTemp; j++)
                             {
@@ -224,7 +224,7 @@ namespace ProjetoEstruturaDeDados
             else
             {
                 Nil();
-            } 
+            }
         }
 
         private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
@@ -238,14 +238,14 @@ namespace ProjetoEstruturaDeDados
             #region versao_2
 
             var temp = new Stack<DicionarioFredis>();
-            
+
 
             var ultimaTransacao = listaDeTransacoes.Pop();
 
             while (torrePrincipal.Any(o => o.Transacao.Equals(ultimaTransacao)))
             {
                 var obj = torrePrincipal.Pop();
-                if((obj.Operacao == Operacao.Insercao && obj.Transacao.Equals(ultimaTransacao)) || !obj.Transacao.Equals(ultimaTransacao))
+                if ((obj.Operacao == Operacao.Insercao && obj.Transacao.Equals(ultimaTransacao)) || !obj.Transacao.Equals(ultimaTransacao))
                 {
                     temp.Push(obj);
                 }
@@ -259,7 +259,7 @@ namespace ProjetoEstruturaDeDados
                     torrePrincipal.Push(temp.Pop());
                 }
             }
-            
+
             Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
             #endregion
         }

@@ -8,21 +8,15 @@ namespace ProjetoEstruturaDeDados
     {
         public Transacao(int indice)
         {
-            Indice = indice;
+            PegaIndice = indice;
             Fechada = false;
-            PodeSerExcluida = true;
+            //PodeSerExcluida = true;
         }
 
-        public int PegaIndice {
-            get
-            {
-                return Indice;
-            } 
-        }
-        private int Indice;
+        public int PegaIndice { get; }
 
         public bool Fechada { get; set; }
 
-        public bool PodeSerExcluida { get; set; }
+        //public bool PodeSerExcluida { get; set; }
     }
 }
