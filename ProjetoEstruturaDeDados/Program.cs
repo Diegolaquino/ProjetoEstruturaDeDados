@@ -106,7 +106,7 @@ namespace ProjetoEstruturaDeDados
                             break;
                         }
 
-                        delChave(entrada[1], ref torrePrincipal);
+                        delChave(entrada[1], ref torrePrincipal, listaDeTransacoes.Peek());
 
                         break;
                     #endregion
@@ -169,11 +169,38 @@ namespace ProjetoEstruturaDeDados
                         }
 
                         var ultimaTransacao = listaDeTransacoes.Pop();
+                        var temp = new Stack<DicionarioFredis>();
+                        var totalTorre = torrePrincipal.Count;
 
-                        while (ultimaTransacao.Equals(torrePrincipal.Peek().Transacao))
+                        for (int i = 0; i < totalTorre; i++)
                         {
-                            torrePrincipal.Pop();
+                            if(torrePrincipal.Peek().Operacao == Operacao.Exclusao && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
+                            {
+                                var objTemp = torrePrincipal.Pop();
+                                objTemp.Transacao = listaDeTransacoes.Peek();
+                                objTemp.Operacao = Operacao.Insercao;
+                                temp.Push(objTemp);
+                            }
+                            else if(torrePrincipal.Peek().Operacao == Operacao.Insercao && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
+                            {
+                                torrePrincipal.Pop();
+                            }
+                            else
+                            {
+                                temp.Push(torrePrincipal.Pop());
+                            }
+                            
                         };
+
+                        var totaltemp = temp.Count;
+
+                        for (int i = 0; i < totaltemp; i++)
+                        {
+                            torrePrincipal.Push(temp.Pop());
+                        }
+
+                        listaDeTransacoes.Clear();
+                        Console.WriteLine("Ok!(transactions left: 0)");
 
                         break;
                     default:
@@ -184,15 +211,13 @@ namespace ProjetoEstruturaDeDados
 
         }
 
-        private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal)
+        private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal, Transacao ultimaTransacao)
         {
             var temp = new Stack<DicionarioFredis>();
             var total = torrePrincipal.Count;
 
             if (torrePrincipal.Any(t => t.Chave == chave))
             {
-
-
                 for (int i = 0; i < total; i++)
                 {
                     var obj = torrePrincipal.Pop();
@@ -200,6 +225,7 @@ namespace ProjetoEstruturaDeDados
                     if (obj.Chave == chave)
                     {
                         obj.Operacao = Operacao.Exclusao;
+                        obj.Transacao = ultimaTransacao;
 
                         torrePrincipal.Push(obj);
 
@@ -229,10 +255,27 @@ namespace ProjetoEstruturaDeDados
 
         private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-
-
             #region versao_1
-            // torrePrincipal.Clear();
+
+            //var temp1 = new Stack<DicionarioFredis>();
+            //var totalTorre = torrePrincipal.Count;
+            //for (int i = 0; i < totalTorre; i++)
+            //{
+            //    if (torrePrincipal.Peek().Operacao == Operacao.Insercao)
+            //    {
+            //        temp1.Push(torrePrincipal.Pop());
+            //    }
+            //    else
+            //    {
+            //        torrePrincipal.Pop();
+            //    }
+            //}
+            //var totalTemp1 = temp1.Count;
+            //for (int i = 0; i < totalTemp1; i++)
+            //{
+            //    torrePrincipal.Push(temp1.Pop());
+            //}
+
             #endregion
 
             #region versao_2
