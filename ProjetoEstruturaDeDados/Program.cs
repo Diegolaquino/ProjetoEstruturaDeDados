@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace ProjetoEstruturaDeDados
 {
@@ -44,17 +45,25 @@ namespace ProjetoEstruturaDeDados
 
                            "  begin" + Environment.NewLine +
                            " " + Environment.NewLine +
-                           "6 - Confirmand todas as operações realizadas" + Environment.NewLine +
+                           "6 - Confirmando todas as operações realizadas" + Environment.NewLine +
 
                            "  commit" + Environment.NewLine +
                            " " + Environment.NewLine +
                            "7 - Desfazendo todas as operações da última " +
                            "transação" + Environment.NewLine +
 
-                           "   rollback" + Environment.NewLine
+                           "   rollback" + Environment.NewLine +
+                           "8 - Sair do programa " + Environment.NewLine +
+                           " exit"
                        );
 
-            while (true)
+            //            Oi, Diego.Tenho mais algumas considerações sobre o exercício, mas no mais, acho que podemos ir para a próxima aula. A elas:
+
+            //-No Fredis, eu não necessariamente preciso ter uma transação aberta pra inserir chaves;
+            //            -Eu posso sobrescrever chaves a qualquer momento;
+
+            bool naoSair = true;
+            while (naoSair)
             {
                 Console.Write("> ");
                 var entrada = Console.ReadLine().Split(" ");
@@ -63,17 +72,14 @@ namespace ProjetoEstruturaDeDados
                 {
                     #region set pronto
                     case "set":
-                        if (listaDeTransacoes.Count == 0)
-                        {
-                            Console.WriteLine("Você deve iniciar pelo menos uma transação");
-                            break;
-                        }
 
-                        var objNovo = new DicionarioFredis(entrada[1], entrada[2], listaDeTransacoes.Peek(), Operacao.Insercao);
+                        var objNovo = new DicionarioFredis(entrada[1], entrada[2], Operacao.Insercao, listaDeTransacoes != null ? null: listaDeTransacoes.Peek());
 
                         if (!torrePrincipal.Any(d => d.Chave == objNovo.Chave))
                         {
-                            objNovo.Transacao = listaDeTransacoes.Peek();
+                            if(listaDeTransacoes.Any())
+                                objNovo.Transacao = listaDeTransacoes.Peek();
+
                             torrePrincipal.Push(objNovo);
                             Ok();
                         }
@@ -98,15 +104,17 @@ namespace ProjetoEstruturaDeDados
                         break;
                     #endregion
 
-                    #region del
+                    #region del pronto
                     case "del":
                         if (torrePrincipal.Where(d => d.Chave == entrada[1]) == null)
                         {
                             Nil();
                             break;
                         }
-
-                        delChave(entrada[1], ref torrePrincipal, listaDeTransacoes.Peek());
+                        if(listaDeTransacoes.Any())
+                            delChave(entrada[1], ref torrePrincipal, listaDeTransacoes.Peek());
+                        else
+                            delChave(entrada[1], ref torrePrincipal);
 
                         break;
                     #endregion
@@ -114,13 +122,7 @@ namespace ProjetoEstruturaDeDados
                     #region add pronto
                     case "add":
 
-                        if (listaDeTransacoes.Count == 0)
-                        {
-                            Console.WriteLine("Você deve iniciar pelo menos uma transação");
-                            break;
-                        }
-
-                        var o = new DicionarioFredis(entrada[1], entrada[2], listaDeTransacoes.Peek(), Operacao.Insercao);
+                        var o = new DicionarioFredis(entrada[1], entrada[2], Operacao.Insercao, listaDeTransacoes.Peek());
 
                         if (!torrePrincipal.Any(d => d.Chave == o.Chave))
                         {
@@ -146,6 +148,7 @@ namespace ProjetoEstruturaDeDados
                         listaDeTransacoes.Push(new Transacao(geradorIndiceTransacao));
                         geradorIndiceTransacao++;
                         break;
+                    #region commit pronto
                     case "commit":
 
                         if (listaDeTransacoes == null)
@@ -160,6 +163,9 @@ namespace ProjetoEstruturaDeDados
 
 
                         break;
+                    #endregion
+
+                    #region rollback pronto
                     case "rollback":
 
                         if (listaDeTransacoes == null)
@@ -181,11 +187,11 @@ namespace ProjetoEstruturaDeDados
                                 objTemp.Operacao = Operacao.Insercao;
                                 temp.Push(objTemp);
                             }
-                            else if(torrePrincipal.Peek().Operacao == Operacao.Insercao && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
+                            else if(torrePrincipal.Peek().Operacao == Operacao.Insercao && torrePrincipal.Peek().Transacao != null && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
                             {
                                 torrePrincipal.Pop();
                             }
-                            else
+                            else if(torrePrincipal.Peek().Transacao != null)
                             {
                                 temp.Push(torrePrincipal.Pop());
                             }
@@ -199,9 +205,25 @@ namespace ProjetoEstruturaDeDados
                             torrePrincipal.Push(temp.Pop());
                         }
 
-                        listaDeTransacoes.Clear();
-                        Console.WriteLine("Ok!(transactions left: 0)");
+                        Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
 
+                        break;
+                    #endregion
+
+                    case "print":
+                        foreach (var item in torrePrincipal)
+                        {
+                            if(item.Operacao == Operacao.Exclusao)
+                                Console.WriteLine("Item chave {0} valor {1} excluído", item.Chave, item.Valor);
+                            else
+                                Console.WriteLine("Item chave {0} valor {1}", item.Chave, item.Valor);
+                        }
+                        break;
+
+                    case "exit":
+                        naoSair = false;
+                        Console.WriteLine("O programa será desligado...");
+                        Thread.Sleep(2000);
                         break;
                     default:
                         Console.WriteLine("Comando inválido");
@@ -211,7 +233,7 @@ namespace ProjetoEstruturaDeDados
 
         }
 
-        private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal, Transacao ultimaTransacao)
+        private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal, Transacao ultimaTransacao = null)
         {
             var temp = new Stack<DicionarioFredis>();
             var total = torrePrincipal.Count;
@@ -224,11 +246,15 @@ namespace ProjetoEstruturaDeDados
 
                     if (obj.Chave == chave)
                     {
-                        obj.Operacao = Operacao.Exclusao;
-                        obj.Transacao = ultimaTransacao;
+                        // Se o elemento que será excluído não tiver transação, não permanece na stack.
+                        if(obj.Transacao != null)
+                        {
+                            obj.Operacao = Operacao.Exclusao;
+                            obj.Transacao = ultimaTransacao;
 
-                        torrePrincipal.Push(obj);
-
+                            torrePrincipal.Push(obj);
+                        }
+                        
                         var totalTemp = temp.Count;
 
                         if (totalTemp != 0)

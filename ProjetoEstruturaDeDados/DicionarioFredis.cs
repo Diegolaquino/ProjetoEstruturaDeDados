@@ -6,7 +6,7 @@ namespace ProjetoEstruturaDeDados
 {
     public class DicionarioFredis
     {
-        public DicionarioFredis(string chave, string valor, Transacao transacao, Operacao operacao)
+        public DicionarioFredis(string chave, string valor, Operacao operacao, Transacao transacao = null)
         {
             Chave = chave;
             Valor = valor;
