@@ -23,6 +23,7 @@ namespace ProjetoEstruturaDeDados
 
         public string Chave { get; set; }
         public string Valor { get; set; }
+        public string ValorAntigo { get; set; }
 
         public Operacao Operacao { get; set; }
 
