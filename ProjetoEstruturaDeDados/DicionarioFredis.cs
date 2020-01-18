@@ -12,6 +12,7 @@ namespace ProjetoEstruturaDeDados
             Valor = valor;
             Transacao = transacao;
             Operacao = operacao;
+            Historico = new Stack<Registro>();
         }
 
         public override bool Equals(Object obj)
@@ -27,9 +28,25 @@ namespace ProjetoEstruturaDeDados
 
         public Operacao Operacao { get; set; }
 
+        public Stack<Registro> Historico;
+
         public override int GetHashCode()
         {
             return HashCode.Combine(Transacao, Chave, Valor, Operacao);
+        }
+    }
+
+    public class Registro
+    {
+        public readonly Transacao transacao;
+        public readonly Operacao? operacao;
+        public readonly string valor;
+
+        public Registro(Transacao t, Operacao o, string v)
+        {
+            transacao = t;
+            operacao = o;
+            valor = v;
         }
     }
 }

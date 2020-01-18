@@ -13,7 +13,7 @@ namespace ProjetoEstruturaDeDados
             //PodeSerExcluida = true;
         }
 
-        public int PegaIndice { get; }
+        public readonly int PegaIndice;
 
         public bool Fechada { get; set; }
 

@@ -51,10 +51,10 @@ namespace ProjetoEstruturaDeDados
                            " " + Environment.NewLine +
                            "7 - Desfazendo todas as operações da última " +
                            "transação" + Environment.NewLine +
-         
+
                            "   rollback" + Environment.NewLine +
 
-                           " " + Environment.NewLine + 
+                           " " + Environment.NewLine +
                            "8 - Printar valores da pilha " + Environment.NewLine +
                            " print" + Environment.NewLine +
 
@@ -63,13 +63,6 @@ namespace ProjetoEstruturaDeDados
                            " exit"
                        );
 
-            //-Na última correção, eu comentei este item, e continua igual: no Fredis,
-            // eu não necessariamente preciso ter uma transação aberta pra inserir chaves. 
-            // No seu exemplo, preciso necessariamente abrir uma transação;
-            //-Mesma coisa com este: eu posso sobrescrever chaves a qualquer momento.
-            // No seu, eu vejo essa mensagem: "Já existe uma chave valor", mesmo se eu usar "set";
-            //-Um outro comentário, que não faz parte do exercício, mas de disciplina profissional, 
-            // é que eu não vi em momento algum tratamento de exceções, e elas acontecem algumas vezes no seu código.
 
             bool naoSair = true;
             while (naoSair)
@@ -84,21 +77,7 @@ namespace ProjetoEstruturaDeDados
 
                         try
                         {
-                            var objNovo = new DicionarioFredis(entrada[1], entrada[2], Operacao.Insercao, listaDeTransacoes.Count == 0 ? null : listaDeTransacoes.Peek());
-
-                            if (!torrePrincipal.Any(d => d.Chave == objNovo.Chave))
-                            {
-                                if (listaDeTransacoes.Any())
-                                    objNovo.Transacao = listaDeTransacoes.Peek();
-
-                                torrePrincipal.Push(objNovo);
-                                Ok();
-                            }
-                            else
-                            {
-                                objNovo.Operacao = Operacao.Sobrescrita;
-                                sobrescreverValor(objNovo, ref torrePrincipal);
-                            }
+                            adicionarValor(entrada, ref torrePrincipal, ref listaDeTransacoes);
                         }
                         catch (Exception e)
                         {
@@ -129,7 +108,7 @@ namespace ProjetoEstruturaDeDados
                         break;
                     #endregion
 
-                    #region del pronto
+                    #region del
                     case "del":
                         try
                         {
@@ -183,14 +162,14 @@ namespace ProjetoEstruturaDeDados
                         break;
                     #endregion
 
-                    #region begin pronto
+                    #region begin
                     case "begin":
                         listaDeTransacoes.Push(new Transacao(geradorIndiceTransacao));
                         geradorIndiceTransacao++;
                         break;
                     #endregion
 
-                    #region commit pronto
+                    #region commit
                     case "commit":
 
                         try
@@ -203,15 +182,15 @@ namespace ProjetoEstruturaDeDados
 
                             commitTransacoes(ref torrePrincipal, ref listaDeTransacoes);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             Console.WriteLine("Erro no commit: " + e.Message);
                         }
-                
+
                         break;
                     #endregion
 
-                    #region rollback pronto
+                    #region rollback
                     case "rollback":
                         try
                         {
@@ -225,7 +204,7 @@ namespace ProjetoEstruturaDeDados
                         catch (Exception e)
                         {
                             Console.WriteLine("Erro no rollback: " + e.Message);
-                        }                 
+                        }
 
                         break;
                     #endregion
@@ -241,7 +220,7 @@ namespace ProjetoEstruturaDeDados
                                 else
                                     Console.WriteLine("Item chave {0} valor {1}", item.Chave, item.Valor);
                             }
-                            
+
                         }
                         catch (Exception e)
                         {
@@ -264,184 +243,63 @@ namespace ProjetoEstruturaDeDados
 
         }
 
+        private static void adicionarValor(string[] entrada, ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
+        {
+
+            if (!torrePrincipal.Any(d => d.Chave == entrada[1]))
+            {
+                var objNovo = new DicionarioFredis(entrada[1], entrada[2], Operacao.Insercao, listaDeTransacoes.Count == 0 ? null : listaDeTransacoes.Peek());
+                objNovo.Transacao = listaDeTransacoes.Peek();
+                torrePrincipal.Push(objNovo);
+                Ok();
+            }
+            else
+            {
+                adicionaValorQueJaExiste(entrada, ref torrePrincipal, ref listaDeTransacoes);
+            }
+        }
+
+        private static void adicionaValorQueJaExiste(string[] entrada, ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
+        {
+            foreach(var item in torrePrincipal)
+            {
+                if(item.Chave == entrada[1])
+                {
+                    if(listaDeTransacoes.Count > 0)
+                    {
+                        item.Historico.Push(new Registro(item.Transacao, item.Operacao, item.Valor));
+                    }
+                    
+                    item.Valor = entrada[2];
+                }
+            }
+        }
+
         private static void sobrescreverValor(DicionarioFredis objNovo, ref Stack<DicionarioFredis> torrePrincipal)
         {
-            var torreTemp = new Stack<DicionarioFredis>();
-            var tamanhoPilha = torrePrincipal.Count;
-            for (int i = 0; i < tamanhoPilha; i++)
-            {
-                if(torrePrincipal.Peek().Chave != objNovo.Chave)
-                {
-                    torreTemp.Push(torrePrincipal.Pop());
-                }
-                else
-                {
-                    var t = torrePrincipal.Pop();
-                    objNovo.ValorAntigo = t.Valor;
-                    torrePrincipal.Push(objNovo);
-                    break;
-                }
-            }
 
 
-            if (torreTemp != null)
-            {
-                var totalTemp = torreTemp.Count;
-
-
-                for (int i = 0; i < totalTemp; i++)
-                {
-                    torrePrincipal.Push(torreTemp.Pop());
-                }
-            }
-                
         }
 
         private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal, Transacao ultimaTransacao = null)
         {
-            var temp = new Stack<DicionarioFredis>();
-            var total = torrePrincipal.Count;
 
-            if (torrePrincipal.Any(t => t.Chave == chave))
-            {
-                for (int i = 0; i < total; i++)
-                {
-                    var obj = torrePrincipal.Pop();
-
-                    if (obj.Chave == chave)
-                    {
-                        // Se o elemento que será excluído não tiver transação, não permanece na stack.
-                        if(obj.Transacao != null)
-                        {
-                            obj.Operacao = Operacao.Exclusao;
-                            obj.Transacao = ultimaTransacao;
-
-                            torrePrincipal.Push(obj);
-                        }
-                        
-                        var totalTemp = temp.Count;
-
-                        if (totalTemp != 0)
-                        {
-                            for (int j = 0; j < totalTemp; j++)
-                            {
-                                torrePrincipal.Push(temp.Pop());
-                            }
-                        }
-
-                        break;
-                    }
-                    else
-                    {
-                        temp.Push(obj);
-                    }
-                }
-            }
-            else
-            {
-                Nil();
-            }
         }
 
         private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-            #region versao_1
-
-            //var temp1 = new Stack<DicionarioFredis>();
-            //var totalTorre = torrePrincipal.Count;
-            //for (int i = 0; i < totalTorre; i++)
-            //{
-            //    if (torrePrincipal.Peek().Operacao == Operacao.Insercao)
-            //    {
-            //        temp1.Push(torrePrincipal.Pop());
-            //    }
-            //    else
-            //    {
-            //        torrePrincipal.Pop();
-            //    }
-            //}
-            //var totalTemp1 = temp1.Count;
-            //for (int i = 0; i < totalTemp1; i++)
-            //{
-            //    torrePrincipal.Push(temp1.Pop());
-            //}
-
-            #endregion
-
-            #region versao_2
-
-            var temp = new Stack<DicionarioFredis>();
-
-
-            var ultimaTransacao = listaDeTransacoes.Pop();
-
-            while (torrePrincipal.Any(o => o.Transacao.Equals(ultimaTransacao)))
-            {
-                var obj = torrePrincipal.Pop();
-                if ((obj.Operacao == Operacao.Insercao && obj.Transacao.Equals(ultimaTransacao)) || !obj.Transacao.Equals(ultimaTransacao))
-                {
-                    temp.Push(obj);
-                }
-            };
-
-            // Transacao diferente de null, pois não é possível commit em valores sem transação
-            var countTemp = temp.Where(x => x.Transacao != null).ToList().Count;
-
-            if (countTemp != 0)
-            {
-                for (int i = 0; i < countTemp; i++)
-                {
-                    torrePrincipal.Push(temp.Pop());
-                }
-            }
 
             Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
-            #endregion
+
         }
 
         private static void rollbackStack(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-            var ultimaTransacao = listaDeTransacoes.Pop();
-            var temp = new Stack<DicionarioFredis>();
-            var totalTorre = torrePrincipal.Count;
 
-            for (int i = 0; i < totalTorre; i++)
-            {
-                if (torrePrincipal.Peek().Operacao == Operacao.Exclusao && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
-                {
-                    var objTemp = torrePrincipal.Pop();
-                    objTemp.Transacao = listaDeTransacoes.Peek();
-                    objTemp.Operacao = Operacao.Insercao;
-                    temp.Push(objTemp);
-                }
-                else if (torrePrincipal.Peek().Operacao == Operacao.Insercao && torrePrincipal.Peek().Transacao != null && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
-                {
-                    torrePrincipal.Pop();
-                }
-                else if(torrePrincipal.Peek().Operacao == Operacao.Sobrescrita && torrePrincipal.Peek().Transacao != null && torrePrincipal.Peek().Transacao.Equals(ultimaTransacao))
-                {
-                    var objTemp = torrePrincipal.Pop();
-                    objTemp.Transacao = listaDeTransacoes.Peek();
-                    objTemp.Operacao = Operacao.Insercao;
-                    objTemp.Valor = objTemp.ValorAntigo;
-                    objTemp.ValorAntigo = null;
-                    temp.Push(objTemp);
-                }
-                else if (torrePrincipal.Peek().Transacao != null)
-                {
-                    temp.Push(torrePrincipal.Pop());
-                }
-
-            };
-
-            var totaltemp = temp.Count;
-
-            for (int i = 0; i < totaltemp; i++)
-            {
-                torrePrincipal.Push(temp.Pop());
-            }
 
             Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
         }
+
+       
     }
 }
