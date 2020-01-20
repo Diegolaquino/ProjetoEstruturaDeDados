@@ -13,6 +13,7 @@ namespace ProjetoEstruturaDeDados
             Transacao = transacao;
             Operacao = operacao;
             Historico = new Stack<Registro>();
+            Historico.Push(new Registro(transacao, operacao, valor));
         }
 
         public override bool Equals(Object obj)
@@ -38,7 +39,7 @@ namespace ProjetoEstruturaDeDados
     public class Registro
     {
         public readonly Transacao transacao;
-        public readonly Operacao? operacao;
+        public readonly Operacao operacao;
         public readonly string valor;
 
         public Registro(Transacao t, Operacao o, string v)
