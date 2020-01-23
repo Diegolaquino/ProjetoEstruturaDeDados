@@ -21,7 +21,11 @@ namespace ProjetoEstruturaDeDados
 
             var torrePrincipal = new Stack<DicionarioFredis>();
 
-            Console.WriteLine(@"Menu:" + Environment.NewLine +
+            Console.WriteLine(@" " + Environment.NewLine + "Menu:" + Environment.NewLine +
+                            " " + Environment.NewLine +
+                           "0 - Zerar dados para novo teste" + Environment.NewLine +
+                           " clear " + Environment.NewLine +
+                            " " + Environment.NewLine +
                            "1 - Adicionando dados:" + Environment.NewLine +
 
                            "  Add:" + Environment.NewLine +
@@ -213,14 +217,20 @@ namespace ProjetoEstruturaDeDados
                     case "print":
                         try
                         {
-                            foreach (var item in torrePrincipal)
+                            if (torrePrincipal.Count == 0)
                             {
-                                if (item.Operacao == Operacao.Exclusao)
-                                    Console.WriteLine("Item chave {0} valor {1} excluído", item.Chave, item.Valor);
-                                else
-                                    Console.WriteLine("Item chave {0} valor {1}", item.Chave, item.Valor);
+                                Console.WriteLine("Não há dados");
                             }
-
+                            else
+                            {
+                                foreach (var item in torrePrincipal)
+                                {
+                                    if (item.Operacao == Operacao.Exclusao)
+                                        Console.WriteLine("Item chave {0} valor {1} excluído", item.Chave, item.Valor);
+                                    else
+                                        Console.WriteLine("Item chave {0} valor {1}", item.Chave, item.Valor);
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
@@ -229,6 +239,10 @@ namespace ProjetoEstruturaDeDados
 
                         break;
                     #endregion
+                    case "clear":
+                        listaDeTransacoes.Clear();
+                        torrePrincipal.Clear();
+                        break;
 
                     case "exit":
                         naoSair = false;
@@ -260,35 +274,36 @@ namespace ProjetoEstruturaDeDados
 
         private static void adicionaValorQueJaExiste(string[] entrada, ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-            foreach(var item in torrePrincipal)
+            foreach (var item in torrePrincipal)
             {
-                if(item.Chave == entrada[1])
+                if (item.Chave == entrada[1])
                 {
                     item.Valor = entrada[2];
 
                     if (listaDeTransacoes.Count > 0)
                     {
-                        item.Historico.Push(new Registro(item.Transacao, item.Operacao, item.Valor));
+                        item.Transacao = listaDeTransacoes.Peek();
+                        item.Historico.Push(new Registro(listaDeTransacoes.Peek(), item.Operacao, item.Valor));
+                    }
+                    else
+                    {
+                        var historico = item.Historico.Pop();
+                        historico.valor = entrada[2];
+                        item.Historico.Push(historico);
                     }
                 }
             }
-        }
-
-        private static void sobrescreverValor(DicionarioFredis objNovo, ref Stack<DicionarioFredis> torrePrincipal)
-        {
-
-
         }
 
         private static void delChave(string chave, ref Stack<DicionarioFredis> torrePrincipal, Transacao ultimaTransacao = null)
         {
             var temp = new Stack<DicionarioFredis>();
 
-            if(ultimaTransacao == null)
+            if (ultimaTransacao == null)
             {
                 foreach (var item in torrePrincipal)
                 {
-                    if(item.Chave != chave)
+                    if (item.Chave != chave)
                         temp.Push(item);
                 }
 
@@ -311,19 +326,37 @@ namespace ProjetoEstruturaDeDados
                     }
                 }
             }
-           
+
         }
 
         private static void commitTransacoes(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
+            var ultimaTransacao = listaDeTransacoes.Peek();
 
-            Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
+            foreach (var item in torrePrincipal)
+            {
+                if (item.Transacao != null && item.Transacao.Equals(ultimaTransacao))
+                {
+                    // seta transacao null, porque depois de commitar volta ao estagio inicial sem transação
+                    item.Transacao = null;
 
+
+                    var countHistorico = item.Historico.Count;
+
+                    // elimina o histórico de transações relativos a ultima transação do commit 
+                    for (int i = 0; i < countHistorico; i++)
+                    {
+                        item.Historico.Pop();
+                    }
+                }
+            }
+
+            listaDeTransacoes.Pop();
         }
 
         private static void rollbackStack(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
         {
-           if(listaDeTransacoes.Count > 0)
+            if (listaDeTransacoes.Count > 0)
             {
                 var temp = new Stack<DicionarioFredis>();
 
@@ -331,12 +364,12 @@ namespace ProjetoEstruturaDeDados
                 {
                     var obj = torrePrincipal.Pop();
 
-                    if(obj.Transacao != null && obj.Transacao.Equals(listaDeTransacoes.Peek()) && obj.Historico.Count == 1)
+                    if (obj.Transacao != null && obj.Transacao.Equals(listaDeTransacoes.Peek()) && obj.Historico.Count == 1)
                     {
                         continue;
                     }
 
-                    if (obj.Transacao != null && obj.Transacao.Equals(listaDeTransacoes.Peek()) && obj.Historico.Count > 1 )
+                    if (obj.Transacao != null && obj.Transacao.Equals(listaDeTransacoes.Peek()) && obj.Historico.Count > 1)
                     {
                         obj.Historico.Pop();
                         obj.Operacao = obj.Historico.Peek().operacao;
@@ -360,9 +393,9 @@ namespace ProjetoEstruturaDeDados
                 Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
             }
 
-            
+
         }
 
-       
+
     }
 }

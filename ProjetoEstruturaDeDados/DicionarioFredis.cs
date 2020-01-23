@@ -40,7 +40,7 @@ namespace ProjetoEstruturaDeDados
     {
         public readonly Transacao transacao;
         public readonly Operacao operacao;
-        public readonly string valor;
+        public string valor;
 
         public Registro(Transacao t, Operacao o, string v)
         {
