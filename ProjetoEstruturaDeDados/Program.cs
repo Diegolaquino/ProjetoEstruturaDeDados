@@ -333,6 +333,8 @@ namespace ProjetoEstruturaDeDados
         {
             var ultimaTransacao = listaDeTransacoes.Peek();
 
+            var temp = new Stack<DicionarioFredis>();
+
             foreach (var item in torrePrincipal)
             {
                 if (item.Transacao != null && item.Transacao.Equals(ultimaTransacao))
@@ -349,9 +351,25 @@ namespace ProjetoEstruturaDeDados
                         item.Historico.Pop();
                     }
                 }
+
+                temp.Push(item);
+            }
+
+            torrePrincipal.Clear();
+
+            var count = temp.Count();
+
+            for (int i = 0; i < count; i++)
+            {
+                var obj = temp.Pop();
+                if(!(obj.Operacao == Operacao.Exclusao && obj.Transacao == null))
+                    torrePrincipal.Push(obj);
             }
 
             listaDeTransacoes.Pop();
+
+            Console.WriteLine("Ok!(transactions left: {0})", listaDeTransacoes.Count);
+
         }
 
         private static void rollbackStack(ref Stack<DicionarioFredis> torrePrincipal, ref Stack<Transacao> listaDeTransacoes)
@@ -360,7 +378,9 @@ namespace ProjetoEstruturaDeDados
             {
                 var temp = new Stack<DicionarioFredis>();
 
-                for (int i = 0; i < torrePrincipal.Count; i++)
+                var countTorre = torrePrincipal.Count;
+
+                for (int i = 0; i < countTorre; i++)
                 {
                     var obj = torrePrincipal.Pop();
 
